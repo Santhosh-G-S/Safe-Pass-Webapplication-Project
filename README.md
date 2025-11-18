@@ -22,7 +22,7 @@ Here is a visual walkthrough of the application in action.
   <img src="Images/Check.png" width="45%" alt="Check Reports"/>
 </div>
 
-### Reporting & AI Features
+### Reporting & Streeet View
 <div align="center">
   <img src="Images/Report.png" width="45%" alt="Report Incident"/>
   <img src="Images/Streetview.png" width="45%" alt="Streetview"/>
