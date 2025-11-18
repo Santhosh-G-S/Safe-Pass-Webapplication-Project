@@ -1,0 +1,23 @@
+# Environment variables
+.env
+*.env
+.env.save
+
+# Firebase credentials
+serviceAccountKey.json
+
+# Database
+*.db
+*.sqlite3
+
+# Session files
+flask_session/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/

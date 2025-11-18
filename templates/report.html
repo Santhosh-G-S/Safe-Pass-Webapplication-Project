@@ -1,0 +1,301 @@
+{% extends "layout.html" %}
+{% block title %}Report Location{% endblock %}
+
+{% block body %}
+<div class="container my-4">
+  <h3 class="text-center mb-3">Select Location & Add Details</h3>
+
+  <!-- Search Box -->
+  <div class="mb-3" style="max-width:820px;margin:0 auto;">
+    <input type="text" id="searchBox" class="form-control" placeholder="Search for a place (e.g., Anna University Chennai, Mumbai Central Station)">
+    <div id="searchResults" class="list-group mt-2" style="max-height:200px;overflow-y:auto;display:none;"></div>
+  </div>
+
+  <div id="map" style="height:450px;border-radius:8px;border:2px solid #dee2e6;" class="mb-4"></div>
+
+  <form id="reportForm" method="post" action="/report" class="mx-auto" style="max-width:820px;">
+    <input type="hidden" id="lat" name="latitude">
+    <input type="hidden" id="lng" name="longitude">
+    <input type="hidden" id="address" name="address">
+
+    <div class="mb-3">
+      <label class="form-label fw-bold">Location</label>
+      <div id="locationDisplay" class="p-3 rounded border" style="min-height:50px;background:transparent;">
+        <small class="text-muted">Click on the map or search for a location above</small>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-bold">Incident Type <span class="text-danger">*</span></label>
+      <select name="incident_type" class="form-select" required>
+        <option value="">Choose...</option>
+        <option value="theft">Theft</option>
+        <option value="harassment">Harassment</option>
+        <option value="hazard">Hazard</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-bold">Description <span class="text-danger">*</span></label>
+      <textarea name="description" class="form-control" rows="4" placeholder="Describe what happened in detail..." required></textarea>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label fw-bold">Date <span class="text-danger">*</span></label>
+        <input id="date" name="date" type="date" class="form-control" required>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label fw-bold">Time <span class="text-danger">*</span></label>
+        <input id="time" name="time" type="time" class="form-control" required>
+      </div>
+    </div>
+
+    <div class="d-grid gap-2">
+      <button id="submitBtn" class="btn btn-lg btn-primary" type="submit" disabled>
+        <span id="btnText">Select Location First</span>
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+let map, marker, geocoder;
+
+window.initMap = async function() {
+  console.log('Initializing map with AdvancedMarkerElement...');
+
+  const latInput = document.getElementById('lat');
+  const lngInput = document.getElementById('lng');
+  const addressInput = document.getElementById('address');
+  const locationDisplay = document.getElementById('locationDisplay');
+  const submitBtn = document.getElementById('submitBtn');
+  const btnText = document.getElementById('btnText');
+  const searchBox = document.getElementById('searchBox');
+  const searchResults = document.getElementById('searchResults');
+
+  // Import marker library
+  const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+
+  // Initialize map
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 20.5937, lng: 78.9629 },
+    zoom: 5,
+    mapId: 'DEMO_MAP_ID', // Required for AdvancedMarkerElement
+    mapTypeControl: true,
+    streetViewControl: true,
+    fullscreenControl: true
+  });
+
+  // Initialize Geocoder
+  try {
+    const { Geocoder } = await google.maps.importLibrary("geocoding");
+    geocoder = new Geocoder();
+    console.log('✓ Geocoder initialized');
+  } catch (error) {
+    console.warn('Geocoder not available:', error);
+  }
+
+  // Try user geolocation
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        const userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        map.setCenter(userLoc);
+        map.setZoom(15);
+        console.log('User location:', userLoc);
+      },
+      function() {},
+      { timeout: 5000 }
+    );
+  }
+
+  // Click to place marker
+  map.addListener('click', function(e) {
+    placeMarker(e.latLng.lat(), e.latLng.lng());
+  });
+
+  function placeMarker(lat, lng) {
+    if (marker) {
+      marker.map = null; // Remove old marker
+    }
+
+    // Create custom pin
+    const pinElement = new PinElement({
+      background: '#DC3545',
+      borderColor: '#FFFFFF',
+      glyphColor: '#FFFFFF',
+      scale: 1.3
+    });
+
+    marker = new AdvancedMarkerElement({
+      map: map,
+      position: { lat, lng },
+      content: pinElement.element,
+      gmpDraggable: true,
+      title: 'Incident Location'
+    });
+
+    marker.addListener('dragend', function(e) {
+      updateLocation(e.latLng.lat, e.latLng.lng);
+    });
+
+    updateLocation(lat, lng);
+  }
+
+  async function updateLocation(lat, lng) {
+    latInput.value = lat;
+    lngInput.value = lng;
+
+    locationDisplay.innerHTML = '<small class="text-muted">📍 Getting address...</small>';
+
+    const coordAddr = 'Lat: ' + lat.toFixed(5) + ', Lng: ' + lng.toFixed(5);
+    addressInput.value = coordAddr;
+    submitBtn.disabled = false;
+    btnText.textContent = 'Submit Report';
+
+    if (geocoder) {
+      try {
+        const response = await geocoder.geocode({ location: { lat, lng } });
+
+        if (response.results && response.results.length > 0) {
+          const fullAddr = response.results[0].formatted_address;
+          addressInput.value = fullAddr;
+
+          locationDisplay.innerHTML =
+            '<strong class="text-success">✓ Location Selected</strong><br>' +
+            '<small>' + fullAddr + '</small>';
+
+          console.log('Address found:', fullAddr);
+        } else {
+          locationDisplay.innerHTML =
+            '<strong class="text-success">✓ Location Selected</strong><br>' +
+            '<small class="text-muted">' + coordAddr + '</small>';
+        }
+      } catch (error) {
+        console.log('Geocoding error:', error.code, error.message);
+
+        if (error.code === 'REQUEST_DENIED') {
+          locationDisplay.innerHTML =
+            '<strong class="text-warning">⚠ Geocoding API Authorization Issue</strong><br>' +
+            '<small>Using coordinates: ' + coordAddr + '</small><br>' +
+            '<small class="text-info">Check: Google Cloud Console → API Key → Remove restrictions (or add Geocoding API)</small>';
+        } else if (error.code === 'OVER_QUERY_LIMIT') {
+          locationDisplay.innerHTML =
+            '<strong class="text-warning">⚠ API Quota Exceeded</strong><br>' +
+            '<small>Using coordinates: ' + coordAddr + '</small>';
+        } else {
+          locationDisplay.innerHTML =
+            '<strong class="text-success">✓ Location Selected</strong><br>' +
+            '<small>' + coordAddr + '</small>';
+        }
+      }
+    } else {
+      locationDisplay.innerHTML =
+        '<strong class="text-success">✓ Location Selected</strong><br>' +
+        '<small>' + coordAddr + '</small>';
+    }
+  }
+
+  // Search functionality
+  let searchTimeout;
+  searchBox.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = searchBox.value.trim();
+
+    if (query.length < 3) {
+      searchResults.style.display = 'none';
+      return;
+    }
+
+    searchTimeout = setTimeout(() => performSearch(query), 500);
+  });
+
+  async function performSearch(query) {
+    searchResults.innerHTML = '<div class="list-group-item">Searching...</div>';
+    searchResults.style.display = 'block';
+
+    try {
+      const { Place } = await google.maps.importLibrary("places");
+
+      const { places } = await Place.searchByText({
+        textQuery: query + ' India',
+        fields: ['displayName', 'location', 'formattedAddress'],
+        locationBias: map.getCenter(),
+        maxResultCount: 5
+      });
+
+      if (!places || places.length === 0) {
+        searchResults.innerHTML = '<div class="list-group-item">No results found. Try: city names, landmarks, or addresses.</div>';
+        return;
+      }
+
+      searchResults.innerHTML = '';
+
+      places.forEach(place => {
+        const item = document.createElement('a');
+        item.href = '#';
+        item.className = 'list-group-item list-group-item-action';
+        item.innerHTML =
+          '<div><strong>' + (place.displayName || 'Unknown') + '</strong></div>' +
+          '<small class="text-muted">' + (place.formattedAddress || '') + '</small>';
+
+        item.onclick = function(e) {
+          e.preventDefault();
+          if (place.location) {
+            const lat = place.location.lat();
+            const lng = place.location.lng();
+            map.setCenter({ lat, lng });
+            map.setZoom(17);
+            placeMarker(lat, lng);
+            searchResults.style.display = 'none';
+            searchBox.value = '';
+          }
+        };
+
+        searchResults.appendChild(item);
+      });
+    } catch (error) {
+      console.error('Search error:', error);
+      searchResults.innerHTML = '<div class="list-group-item text-muted">Search not available. Click on map instead.</div>';
+    }
+  }
+
+  // Hide search results on outside click
+  document.addEventListener('click', function(e) {
+    if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) {
+      searchResults.style.display = 'none';
+    }
+  });
+
+  // Set current date/time
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  document.getElementById('date').value = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  document.getElementById('time').value = pad(now.getHours()) + ':' + pad(now.getMinutes());
+
+  // Form validation
+  document.getElementById('reportForm').addEventListener('submit', function(e) {
+    if (!latInput.value || !lngInput.value) {
+      e.preventDefault();
+      alert('Please select a location on the map first!');
+      return false;
+    }
+    return true;
+  });
+
+  console.log('Map ready with AdvancedMarkerElement!');
+}
+
+window.gm_authFailure = function() {
+  alert('Google Maps API authentication failed.');
+};
+</script>
+
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&libraries=places,geocoding,marker&callback=initMap&v=beta">
+</script>
+
+{% endblock %}

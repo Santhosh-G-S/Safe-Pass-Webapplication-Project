@@ -1,0 +1,12 @@
+.gcloudignore
+.git
+.gitignore
+__pycache__/
+*.pyc
+.env
+.env.local
+venv/
+.venv/
+flask_session/*
+*.db
+*.log
