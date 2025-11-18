@@ -65,17 +65,20 @@ cd Safe-Pass-Webapplication-Project
 
 ### 2. Set up Environment Variables
 Create a .env file in the root directory and add your API keys:
-```bash
+```shell
 GOOGLE_MAPS_API_KEY=your_key_here
 GEMINI_API_KEY=your_key_here
 FLASK_SECRET_KEY=your_secret_key
+```
 
 ### 3. Install Dependencies
 Create a .env file in the root directory and add your API keys:
-```bash
+```shell
 pip install -r requirements.txt
+```
 
 ### 4. Run the Application
 Create a .env file in the root directory and add your API keys:
-```bash
+```shell
 flask run
+```
