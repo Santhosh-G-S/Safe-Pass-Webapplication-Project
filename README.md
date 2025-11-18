@@ -62,6 +62,7 @@ To run this project locally, follow these steps:
 ```bash
 git clone [https://github.com/Santhosh-G-S/Safe-Pass-Webapplication-Project.git](https://github.com/Santhosh-G-S/Safe-Pass-Webapplication-Project.git)
 cd Safe-Pass-Webapplication-Project
+```
 
 ### 2. Set up Environment Variables
 Create a .env file in the root directory and add your API keys:
