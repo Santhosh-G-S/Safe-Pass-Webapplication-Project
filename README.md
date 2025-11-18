@@ -18,19 +18,19 @@ Here is a visual walkthrough of the application in action.
 
 ### Core Interface
 <div align="center">
-  <img src="images/Login.png" width="45%" alt="Login Page"/>
-  <img src="images/Check.png" width="45%" alt="Check Reports"/>
+  <img src="Images/Login.png" width="45%" alt="Login Page"/>
+  <img src="Images/Check.png" width="45%" alt="Check Reports"/>
 </div>
 
 ### Reporting & AI Features
 <div align="center">
-  <img src="images/Report.png" width="45%" alt="Report Incident"/>
-  <img src="images/Streetview.png" width="45%" alt="Streetview"/>
+  <img src="Images/Report.png" width="45%" alt="Report Incident"/>
+  <img src="Images/Streetview.png" width="45%" alt="Streetview"/>
 </div>
 
 ### AI Assistant
 <div align="center">
-  <img src="images/Ai%20chat.png" width="600px" alt="AI Chat Interface"/>
+  <img src="Images/Ai%20chat.png" width="600px" alt="AI Chat Interface"/>
 </div>
 
 ## Technology Stack
